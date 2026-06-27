@@ -222,14 +222,14 @@
      ============================================================ */
 
   // ── 恢复函数 ──
+  const _countDisplayEl = document.getElementById('countDisplay');
   function restoreAll() {
     // 功德数
-    const countEl = document.getElementById('countDisplay');
-    if (countEl) {
+    if (_countDisplayEl) {
       const saved = localStorage.getItem('meritCount') ?? '0';
-      if (countEl.innerText !== saved) {
-        console.warn('[防篡改] 功德數從', countEl.innerText, '恢復為', saved);
-        countEl.innerText = saved;
+      if (_countDisplayEl.innerText !== saved) {
+        console.warn('[防篡改] 功德數從', _countDisplayEl.innerText, '恢復為', saved);
+        _countDisplayEl.innerText = saved;
       }
     }
 
@@ -261,11 +261,12 @@
   /* ============================================================
      5. MutationObserver — 监视 #countDisplay + #titleText + .subtitle
      ============================================================ */
+  let _debounceTimer = null;
   function watchElement(el, label) {
     if (!el || !window.MutationObserver) return;
     const obs = new MutationObserver(function () {
-      // 等 main.js 一个 tick 同步 localStorage，再恢复
-      setTimeout(restoreAll, 100);
+      clearTimeout(_debounceTimer);
+      _debounceTimer = setTimeout(restoreAll, 100);
     });
     obs.observe(el, {
       childList:      true,
@@ -276,7 +277,7 @@
     });
   }
 
-  watchElement(document.getElementById('countDisplay'), 'countDisplay');
+  watchElement(_countDisplayEl, 'countDisplay');
   watchElement(titleEl, 'titleText');
   watchElement(subtitleEl, 'subtitle');
 

@@ -81,12 +81,17 @@
     }, 700);
   }
 
+  // 通用弹性脉冲
+  function pulseElement(el, scale, duration) {
+    el.style.transform = `scale(${scale})`;
+    setTimeout(() => { el.style.transform = 'scale(1)'; }, duration);
+  }
+
   // 敲击动画（木鱼缩放、功德数字弹动）
   function playHitAnimation() {
-    // 功德数字弹动
     countDisplay.style.transform = 'scale(1.2)';
     myFishElement.style.transform = 'scale(0.92)';
-    
+
     if(animationTimer) clearTimeout(animationTimer);
     animationTimer = setTimeout(() => {
       countDisplay.style.transform = 'scale(1)';
@@ -109,21 +114,13 @@
     if(newVal >= 0) return;      // 禁止 0 和正数，最大只允许 -1
     knockDelta = newVal;
     updateDeltaUI();
-    // 添加一个小的视觉反馈
-    knockValueSpan.style.transform = 'scale(1.1)';
-    setTimeout(() => {
-      knockValueSpan.style.transform = 'scale(1)';
-    }, 100);
+    pulseElement(knockValueSpan, 1.1, 100);
   }
-  
+
   function resetKnockDelta() {
     knockDelta = -1;
     updateDeltaUI();
-    // 添加视觉反馈
-    knockValueSpan.style.transform = 'scale(1.1)';
-    setTimeout(() => {
-      knockValueSpan.style.transform = 'scale(1)';
-    }, 100);
+    pulseElement(knockValueSpan, 1.1, 100);
   }
 
   // ----- 手动设置功德数（新功能）-----
@@ -136,19 +133,14 @@
     }
     currentCount = newCount;
     updateCountUI();
-    // 添加视觉反馈
-    countDisplay.style.transform = 'scale(1.1)';
-    setTimeout(() => {
-      countDisplay.style.transform = 'scale(1)';
-    }, 200);
-    // 显示提示飘字
-    showFloatingText(currentCount - (currentCount - newCount));
+    pulseElement(countDisplay, 1.1, 200);
+    showFloatingText(knockDelta);
   }
 
   // ----- 自动敲 (最小20ms, 动态调整)-----
   function restartAutoClick() {
     if(!autoActive) return;
-    if(autoIntervalId) clearInterval(autoIntervalId);
+    clearInterval(autoIntervalId);
     
     let intervalMs = parseInt(intervalInput.value, 10);
     if(isNaN(intervalMs) || intervalMs < 20) {
@@ -165,7 +157,7 @@
   }
   
   function startAuto() {
-    if(autoIntervalId) clearInterval(autoIntervalId);
+    clearInterval(autoIntervalId);
     autoActive = true;
     autoClickElement.classList.add('confirm');
     autoClickElement.innerText = '⏸ 停止';
@@ -197,8 +189,7 @@
     if(rawVal < 20) rawVal = 20;
     intervalInput.value = rawVal;
     if(autoActive) {
-      // 重启自动敲以应用新间隔
-      if(autoIntervalId) clearInterval(autoIntervalId);
+      clearInterval(autoIntervalId);
       restartAutoClick();
     }
   }
@@ -225,14 +216,18 @@
     isPressing = false;
   });
   
-  // 2. 键盘空格 (考虑长按防连击)
+  // 2. 键盘空格 (考虑长按防连击) + 防止页面滚动
   window.addEventListener('keydown', (e) => {
     if(e.code === 'Space') {
+      if(e.target === countInput) return;
       e.preventDefault();
       if(!isPressing) {
         isPressing = true;
-        // 按下时不敲，弹起时才敲（更符合物理触感）
       }
+    }
+    if((e.code === 'ArrowUp' || e.code === 'ArrowDown') &&
+       (e.target === document.body || e.target === document.documentElement)) {
+      e.preventDefault();
     }
   });
   window.addEventListener('keyup', (e) => {
@@ -280,23 +275,13 @@
   
   // 6. 手动设置功德数
   setCountBtn.addEventListener('click', setCountManually);
-  countInput.addEventListener('keypress', (e) => {
+  countInput.addEventListener('keydown', (e) => {
     if(e.key === 'Enter') {
       setCountManually();
     }
   });
   
-  // 防止页面空格滚动
-  window.addEventListener('keydown', function(e) {
-    if(e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown') {
-      if(e.target === document.body || e.target === document.documentElement || e.target === countInput) {
-        // 如果焦点在输入框内，不阻止默认行为
-        if(e.target === countInput) return;
-        e.preventDefault();
-      }
-    }
-  });
-  
+
   // 避免鼠标移出时状态错误
   window.addEventListener('mouseup', () => {
     isPressing = false;

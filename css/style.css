@@ -596,7 +596,6 @@ a:hover, .textButton:hover { color: var(--violet); }
     border-radius: var(--radius-lg);
   }
 
-  .titleInput { font-size: 1rem; max-width: 160px; }
   .count { font-size: 2.4rem; min-width: 64px; }
   .myFish { max-width: 175px; }
   #center::before { width: 185px; height: 150px; }
