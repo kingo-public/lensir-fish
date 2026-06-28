@@ -11,8 +11,12 @@
   const KEY_PAGE_TITLE   = 'lensir_pageTitle';
   const KEY_HTML_TITLE   = 'lensir_htmlTitle';
   const KEY_FLOAT_TEXT   = 'lensir_floatText';
+  const KEY_SUBTITLE    = 'lensir_subtitle';
+  const KEY_FOOTER      = 'lensir_footer';
   const DEFAULT_TITLE    = '🐟 梁sir的木魚';
   const DEFAULT_FLOAT    = '梁sir功德 {n}';
+  const DEFAULT_SUBTITLE = '梁sir的功德';
+  const DEFAULT_FOOTER   = '敲梁sir木魚，見梁sir炸機，獲上傳病毒。';
   const TAMPER_INTERVAL  = 5000; // 5 秒
 
   /* ============================================================
@@ -20,16 +24,22 @@
      ============================================================ */
   const titleEl        = document.getElementById('titleText');
   const subtitleEl     = document.querySelector('.subtitle');
+  const footerPhrase   = document.getElementById('footerPhrase');
   const savedPageTitle = localStorage.getItem(KEY_PAGE_TITLE) || DEFAULT_TITLE;
   const savedHtmlTitle = localStorage.getItem(KEY_HTML_TITLE) || DEFAULT_TITLE;
+  const savedSubtitle  = localStorage.getItem(KEY_SUBTITLE) || DEFAULT_SUBTITLE;
+  const savedFooter    = localStorage.getItem(KEY_FOOTER) || DEFAULT_FOOTER;
 
-  // 记录"正确"的标题值（防篡改用）
+  // 记录"正确"的值（防篡改用）
   let _correctPageTitle = savedPageTitle;
   let _correctHtmlTitle = savedHtmlTitle;
-  const _correctSubtitle = subtitleEl ? subtitleEl.textContent : '';
+  let _correctSubtitle  = savedSubtitle;
+  let _correctFooter    = savedFooter;
 
   if (titleEl) titleEl.textContent = _correctPageTitle;
   document.title = _correctHtmlTitle;
+  if (subtitleEl) subtitleEl.textContent = _correctSubtitle;
+  if (footerPhrase) footerPhrase.textContent = _correctFooter;
 
   /* ============================================================
      2. 底部 🐟 点击 → 触发木鱼敲击
@@ -68,7 +78,8 @@
   const htmlTitleInp  = document.getElementById('settingsHtmlTitle');
   const pageTitleInp  = document.getElementById('settingsPageTitle');
   const meritCountInp = document.getElementById('settingsMeritCount');
-  const footerPhrase  = document.getElementById('footerPhrase');
+  const subtitleInp   = document.getElementById('settingsSubtitle');
+  const footerInp     = document.getElementById('settingsFooter');
 
   // ── 打开弹窗 ──
   function openModal() {
@@ -100,6 +111,9 @@
       // 预填标题
       if (htmlTitleInp) htmlTitleInp.value = document.title;
       if (pageTitleInp && titleEl) pageTitleInp.value = titleEl.textContent;
+      // 预填新增字段
+      if (subtitleInp && subtitleEl) subtitleInp.value = subtitleEl.textContent;
+      if (footerInp && footerPhrase) footerInp.value = footerPhrase.textContent;
       // 预填功德数
       if (meritCountInp) {
         meritCountInp.value = localStorage.getItem('meritCount') || '0';
@@ -134,7 +148,19 @@
     localStorage.setItem(KEY_PAGE_TITLE, newPageTitle);
     _correctPageTitle = newPageTitle;
 
-    // 4. 功德数
+    // 4. 副标题
+    const newSubtitle = (subtitleInp && subtitleInp.value.trim()) || DEFAULT_SUBTITLE;
+    if (subtitleEl) subtitleEl.textContent = newSubtitle;
+    localStorage.setItem(KEY_SUBTITLE, newSubtitle);
+    _correctSubtitle = newSubtitle;
+
+    // 5. 底部口号
+    const newFooter = (footerInp && footerInp.value.trim()) || DEFAULT_FOOTER;
+    if (footerPhrase) footerPhrase.textContent = newFooter;
+    localStorage.setItem(KEY_FOOTER, newFooter);
+    _correctFooter = newFooter;
+
+    // 6. 功德数
     if (meritCountInp) {
       const newCount = parseInt(meritCountInp.value, 10);
       if (!isNaN(newCount)) {
@@ -245,6 +271,12 @@
       subtitleEl.textContent = _correctSubtitle;
     }
 
+    // 底部口号
+    if (footerPhrase && footerPhrase.textContent !== _correctFooter) {
+      console.warn('[防篡改] 底部口號恢復');
+      footerPhrase.textContent = _correctFooter;
+    }
+
     // 浏览器标签页
     if (document.title !== _correctHtmlTitle) {
       console.warn('[防篡改] HTML標題恢復');
@@ -280,6 +312,7 @@
   watchElement(_countDisplayEl, 'countDisplay');
   watchElement(titleEl, 'titleText');
   watchElement(subtitleEl, 'subtitle');
+  watchElement(footerPhrase, 'footerPhrase');
 
   /* ============================================================
      6. 防止非输入元素被 contenteditable 编辑
